@@ -1,0 +1,4 @@
+Change; Name
+Created initial GitHub repository; Maximilian Schön
+Extending env variables; Maximilian Schön
+Adding initial mock routes for future frontend; Maximilian Schön
