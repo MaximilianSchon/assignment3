@@ -25,7 +25,7 @@
 
             </div>
             <div class="control mb-3">
-              <button class="button is-fullwidth">Send annotation</button>
+              <button class="button is-fullwidth" onClick="send()">Send annotation</button>
             </div>
 
           </div>
@@ -124,7 +124,9 @@
               .style("fill", "#69b3a2")
               .on("mouseover", function (d) {
                     addToolTip(d, x(d.X), y(d.Y));
-                });
+              })
+              .on("click", showAndUpdateAnnotation)
+
         
                 <% } else {%>
             var x = d3.scaleTime()
