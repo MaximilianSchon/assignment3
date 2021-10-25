@@ -1,10 +1,6 @@
 import {
     Prisma,
-    Test,
     Test_Session,
-    Therapy,
-    Therapy_List,
-    User
 } from ".prisma/client";
 import {
     Controller,
@@ -17,11 +13,9 @@ import {
     View
 } from "@tsed/common";
 import {Authenticate} from "@tsed/passport";
-import {response} from "express";
 import path from "path";
 import {AuthRoles} from "../decorators/AuthRoles";
 import {UserService} from "../services/UserService";
-import fs from "fs";
 import {Forbidden} from "@tsed/exceptions";
 import got from 'got';
 import parser from "fast-xml-parser";
@@ -34,6 +28,7 @@ export class IndexController {
     private userService : UserService;
 
     @Post('/annotate')
+    @AuthRoles('researcher', 'junior researcher', 'physician')
     annotate() {
         /**
          * The request should probably look something like this.
@@ -52,6 +47,7 @@ export class IndexController {
     }
 
     @Authenticate("facebook")
+    @AuthRoles('patient')
     @Get("/patient")
     @View("patient.ejs")
     user(@Req()request : any) {
@@ -73,6 +69,7 @@ export class IndexController {
     }
 
     @Authenticate("twitter")
+    @AuthRoles('physician')
     @Get("/physician")
     @View("physician.ejs")
     async physician(@Req()request : any) {
@@ -82,6 +79,7 @@ export class IndexController {
     }
 
     @Authenticate("github")
+    @AuthRoles('researcher', 'junior researcher')
     @Get("/researcher")
     @View("researcher.ejs")
     async researcher(@Req()request : any) {
@@ -96,7 +94,20 @@ export class IndexController {
     @View("data-viz.ejs")
     async data(@PathParams("data")data : string, @Req()request : any, @Res()response : Res) {
         const session = JSON.parse(request.session.passport.user)
-        const {patients} = await this.getUserWithPatients(session.userID)
+        const d = await this.getDataFromUserId(data, session.userID)
+        console.log(d.data)
+        const user = await this.userService
+        .findUnique({
+            where: {
+                userID: session.userID
+            }});
+
+        return {user, ...d}
+    }
+
+
+    async getDataFromUserId(data: string, userId: number) {
+        const {patients} = await this.getUserWithPatients(userId)
         const sessions = patients.reduce((acc : string[], p : UserWithTherapies[]) => [
             ...acc,
             ...p
@@ -129,14 +140,6 @@ export class IndexController {
         // https://stackoverflow.com/questions/67256503/csv-to-json-list-of-arrays
         const json = await csv()
             .fromFile(csvPath)
-            .then((json) => json.reduce((acc, v, i) => {
-                for (const [key, value] of Object.entries(v)) {
-                    if (!acc[key]) 
-                        acc[key] = [];
-                    acc[key].push(value);
-                }
-                return acc;
-            }, {}))
         return {data: json, type}
     }
 

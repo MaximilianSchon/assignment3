@@ -87,6 +87,14 @@ model Medicine {
   therapies  Therapy_List[]
 }
 
+model Annotation {
+  annotationID Int @id @default(autoincrement())
+  test_Session_IDTest_Session Int
+  X Int
+  Y Int
+  annotation String
+}
+
 model Session {
   id        String   @id
   sid       String   @unique
