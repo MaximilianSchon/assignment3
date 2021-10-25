@@ -20,6 +20,7 @@ import {Forbidden} from "@tsed/exceptions";
 import got from 'got';
 import parser from "fast-xml-parser";
 import csv from "csvtojson";
+import { AnnotationService } from "../services/AnnotationService";
 
 @Controller("/")
 export class IndexController {
@@ -27,17 +28,38 @@ export class IndexController {
     @Inject()
     private userService : UserService;
 
+    @Inject()
+    private annotationService : AnnotationService;
+
     @Post('/annotate')
     @AuthRoles('researcher', 'junior researcher', 'physician')
-    annotate() {
-        /**
-         * The request should probably look something like this.
-         * Annotation (text)
-         * X (canvasX - Center)
-         * Y (canvasY - Center)
-         * Radius/Side (of the object)
-         **/
-        return {result: "Sucessfully annotated"}
+    async annotate(@Req("session") session: any, @Req("X") X: number, @Req("X") Y: number, @Req("test_session") testSessionId: number, @Req("text") annotation: string) {
+        const { patients } = await this.getUserWithPatients(JSON.parse(session.passport.user).userID)
+        const sessions = patients.reduce((acc : string[], p : UserWithTherapies[]) => [
+            ...acc,
+            ...p
+            //@ts-ignore checks permissions
+                .patient_therapies
+                .reduce((acc : string[], th : TherapyWithTests) => [
+                    ...acc,
+                    ...th
+                        .tests
+                        .reduce((acc : string[], t : TestWithSessions) => [
+                            ...acc,
+                            ...t.test_sessions
+
+                        ], [])
+                ], [])
+        ], []).map(s => s.test_SessionID)
+        if (!sessions.include(testSessionId)) {
+            throw new Forbidden("You are not allowed to modify this session")
+        }
+        return this.annotationService.create({data: {
+            X,
+            Y,
+            test_Session_IDTest_Session: testSessionId,
+            annotation,
+        }})
     }
 
     @Get('/')

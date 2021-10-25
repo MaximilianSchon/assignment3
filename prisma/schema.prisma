@@ -51,6 +51,7 @@ model Test_Session {
   test           Test   @relation(fields: [test_IDtest], references: [testID])
   dataURL        String
   notes          Note[]
+  annotations Annotation[]
 }
 
 model Test {
@@ -90,6 +91,7 @@ model Medicine {
 model Annotation {
   annotationID Int @id @default(autoincrement())
   test_Session_IDTest_Session Int
+  test_session Test_Session @relation(fields: [test_Session_IDTest_Session], references: [test_SessionID])
   X Int
   Y Int
   annotation String
