@@ -34,7 +34,7 @@ class CustomUserInfoModel {
 @Configuration({
   ...config,
   acceptMimes: ["application/json"],
-  port:  process.env.PORT || 8083, // CHANGE
+  port:  process.env.PORT || 3000, // CHANGE
   componentsScan: [
     `${rootDir}/protocols/*.ts` // scan protocols directory
   ],

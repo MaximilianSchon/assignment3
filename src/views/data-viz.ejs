@@ -1,7 +1,182 @@
 <%- include('./common/head'); %>
 <header>
     <%- include('./common/navbar', {user: user}); %>
+    <script src="https://d3js.org/d3.v4.js"></script>
+    <style>
+        .eps-tooltip {
+            color: "orange";
+            background-color: "white";
+            fill: "#ff5628"
+        }
+    </style>
 </header>
 <body>
-    <p>Empty data visualization. Hopefully I managed to get each rows properly</p>
+    <section class="hero is-fullheight container" style='padding-top: 50px'>
+        <div class="hero-body has-text-centered">
+            <div id="my_dataviz" style="margin-left: auto; margin-right: auto;"></div>
+            <% if (type === 2) { %>
+
+            <div id="my_dataviz2" style="margin-left: auto; margin-right: auto;"></div>
+            <% } %>
+        </div>
+    </section>
+    <script>
+                // set the dimensions and margins of the graph
+                var margin = {top: 10, right: 30, bottom: 30, left: 60},
+            width = 700 - margin.left - margin.right,
+            height = 400 - margin.top - margin.bottom;
+        
+        // append the svg object to the body of the page
+        var svg = d3.select("#my_dataviz")
+          .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+          .append("g")
+            .attr("transform",
+                  "translate(" + margin.left + "," + margin.top + ")");
+        
+        const addToolTip = (d, x, y) => {
+            svg.append("text")
+            .attr("class", "eps-tooltip")
+            .style("text-anchor", "middle")
+            .text("Time: " +d.time)
+            .attr("x", x)
+            .attr("y", y);
+
+        // Remove trigger must come after text
+
+        svg.append("circle")
+            .attr("class", "overlay")
+            .attr("r", 3)
+            .attr("cx", x)
+            .attr("cy", y)
+            .on("mouseout", function (d) {
+            d3.select(this).remove();
+            d3.selectAll(".overlay").remove();
+            d3.selectAll(".eps-tooltip").remove();
+            });
+        } 
+        //Read the data
+        const data = <%- JSON.stringify(data) %>
+        const whatever = "";
+    </script>
+    <script>
+    <% if (type === 1) { %>
+
+
+        console.log(data);
+          // Add X axis
+          var x = d3.scaleLinear()
+            .domain([0, d3.max(data, (d) => parseInt(d.X) + 10)])
+            .range([ 0, width ]);
+          svg.append("g")
+            .attr("transform", "translate(0," + height + ")")
+            .call(d3.axisBottom(x));
+        
+          // Add Y axis
+          var y = d3.scaleLinear()
+          .domain([0, d3.max(data, (d) => parseInt(d.Y) + 10)])
+            .range([ height, 0]);
+          svg.append("g")
+            .call(d3.axisLeft(y));
+        
+          // Add dots
+          svg.append('g')
+            .selectAll("dot")
+            .data(data)
+            .enter()
+            .append("circle")
+              .attr("cx", function (d) { return x(d.X); } )
+              .attr("cy", function (d) { return y(d.Y); } )
+              .attr("r", 5)
+              .style("fill", "#69b3a2")
+              .on("mouseover", function (d) {
+                    addToolTip(d, x(d.X), y(d.Y));
+                });
+        
+                <% } else {%>
+            var x = d3.scaleTime()
+            .domain([0, d3.max(data, (d) => parseInt(d.time) + 10)])
+            .range([ 0, width ]);
+            svg.append("g")
+            .attr("transform", "translate(0," + height + ")")
+            .call(d3.axisBottom(x));
+
+            // Add Y axis
+            var y = d3.scaleLinear()
+            .domain([0, d3.max(data, (d) => parseInt(d.X) + 10)])
+            .range([ height, 0 ]);
+            svg.append("g")
+            .call(d3.axisLeft(y));
+
+            // Add the line
+            svg.append("path")
+            .datum(data)
+            .attr("fill", "none")
+            .attr("stroke", "black")
+            .attr("stroke-width", 1.5)
+            .attr("d", d3.line()
+                .x(function(d) { return x(d.time) })
+                .y(function(d) { return y(d.X) })
+                )
+
+                // Add dots
+            svg.append('g')
+                .selectAll("dot")
+                .data(data)
+                .enter()
+                .append("circle")
+                .attr("cx", function (d) { return x(d.time); } )
+                .attr("cy", function (d) { return y(d.X); } )
+                .attr("r", 5)
+                .style("fill", function (d) { return d.correct == 1 ? 'blue' : 'red'})
+                .on("mouseover", function (d) {
+                        addToolTip(d, x(d.X), y(d.Y));
+                    });
+                            // append the svg object to the body of the page
+        var svg2 = d3.select("#my_dataviz2")
+          .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+          .append("g")
+            .attr("transform",
+                  "translate(" + margin.left + "," + margin.top + ")");
+        
+                  var x = d3.scaleTime()
+            .domain([0, d3.max(data, (d) => parseInt(d.Y) + 10)])
+            .range([ 0, width ]);
+            svg2.append("g")
+            .attr("transform", "translate(0," + height + ")")
+            .call(d3.axisBottom(x));
+
+            // Add Y axis
+            var y = d3.scaleLinear()
+            .domain([0, d3.max(data, (d) => parseInt(d.time) + 10)])
+            .range([ height, 0 ]);
+            svg2.append("g")
+            .call(d3.axisLeft(y));
+
+            // Add the line
+            svg2.append("path")
+            .datum(data)
+            .attr("fill", "none")
+            .attr("stroke", "black")
+            .attr("stroke-width", 1.5)
+            .attr("d", d3.line()
+                .x(function(d) { return x(d.Y) })
+                .y(function(d) { return y(d.time) })
+                )
+
+                // Add dots
+            svg2.append('g')
+                .selectAll("dot")
+                .data(data)
+                .enter()
+                .append("circle")
+                .attr("cx", function (d) { return x(d.Y); } )
+                .attr("cy", function (d) { return y(d.time); } )
+                .attr("r", 5)
+                .style("fill", function (d) { return d.correct == 1 ? 'blue' : parseInt(d.button) == 0 ? 'red' : 'pink'})
+            <% } %>
+    </script>
 </body>
