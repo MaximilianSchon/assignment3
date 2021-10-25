@@ -52,7 +52,7 @@
                                                     <%= session.type == 1 ? "Spiral" : "Tapping" %>
                                                 </td>
                                                 <td width="20%">
-                                                    <a href="/data/<%= session.dataURL %>.csv">Download</a>
+                                                    <a href="/sessions/<%= session.test_SessionID %>">View</a>
                                                 </td>
                                                 <td class="p-0 border-0" width="60%">
                                                     <% if (session.notes.length > 0) { %>

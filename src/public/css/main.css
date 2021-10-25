@@ -55,7 +55,7 @@ p.title:first-letter {
     text-transform: capitalize;
 }
 
-* {
+body {
     background-color: #ebf5fc;
 }
 .container {

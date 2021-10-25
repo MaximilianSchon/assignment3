@@ -12,18 +12,28 @@
 </header>
 <body>
     <section class="hero is-fullheight container" style='padding-top: 50px'>
-        <div class="hero-body has-text-centered">
+        <div class="hero-body has-text-centered mb-0">
             <div id="my_dataviz" style="margin-left: auto; margin-right: auto;"></div>
             <% if (type === 2) { %>
-
-            <div id="my_dataviz2" style="margin-left: auto; margin-right: auto;"></div>
+              <div id="my_dataviz2" style="margin-left: auto; margin-right: auto;"></div>
             <% } %>
-        </div>
+          </div>
+          <br/>
+          <div class="is-hidden">
+            <div class="control mb-3">
+              <input id="annotation" class="input" type="text" placeholder="Annotation">
+
+            </div>
+            <div class="control mb-3">
+              <button class="button is-fullwidth">Send annotation</button>
+            </div>
+
+          </div>
     </section>
     <script>
                 // set the dimensions and margins of the graph
-                var margin = {top: 10, right: 30, bottom: 30, left: 60},
-            width = 700 - margin.left - margin.right,
+            var margin = {top: 10, right: 30, bottom: 30, left: 60},
+            width = 500 - margin.left - margin.right,
             height = 400 - margin.top - margin.bottom;
         
         // append the svg object to the body of the page
@@ -61,10 +71,32 @@
         const whatever = "";
     </script>
     <script>
+      const session = <%- JSON.stringify(session) %>;
+      const annotations = <%- JSON.stringify(session.annotations || []) %>
+      let selected = null; // format: {X: 1, Y: 2}
+
+      let annotation = "";
+
+
+      const send = () => {
+       console.log(annotation)
+        //TODO: add axios request to save the annotation
+      }
+      const source = document.getElementById('annotation');
+      source.addEventListener("input", (e) => annotation = e.target.value)
+
+      function showAndUpdateAnnotation(d) {
+                const coords = d3.mouse(this);
+                const elements = document.getElementsByClassName("is-hidden");
+                for (const e of elements) {
+                  e.classList.remove("is-hidden")
+                }
+                selected = d;
+                // TODO: Iterate list of annotations and find the matching X and Y values.
+              }
     <% if (type === 1) { %>
 
 
-        console.log(data);
           // Add X axis
           var x = d3.scaleLinear()
             .domain([0, d3.max(data, (d) => parseInt(d.X) + 10)])
@@ -130,9 +162,7 @@
                 .attr("cy", function (d) { return y(d.X); } )
                 .attr("r", 5)
                 .style("fill", function (d) { return d.correct == 1 ? 'blue' : 'red'})
-                .on("mouseover", function (d) {
-                        addToolTip(d, x(d.X), y(d.Y));
-                    });
+                .on("click", showAndUpdateAnnotation)
                             // append the svg object to the body of the page
         var svg2 = d3.select("#my_dataviz2")
           .append("svg")
@@ -177,6 +207,7 @@
                 .attr("cy", function (d) { return y(d.time); } )
                 .attr("r", 5)
                 .style("fill", function (d) { return d.correct == 1 ? 'blue' : parseInt(d.button) == 0 ? 'red' : 'pink'})
+                .on("click", showAndUpdateAnnotation)
             <% } %>
     </script>
 </body>

@@ -111,24 +111,23 @@ export class IndexController {
         return {user, patients, feed}
     }
 
-    @Get("/data/:data")
+    @Get("/sessions/:session")
     @AuthRoles('researcher', 'physician')
     @View("data-viz.ejs")
-    async data(@PathParams("data")data : string, @Req()request : any, @Res()response : Res) {
-        const session = JSON.parse(request.session.passport.user)
-        const d = await this.getDataFromUserId(data, session.userID)
-        console.log(d.data)
+    async data(@PathParams("session")session : string, @Req()request : any, @Res()response : Res) {
+        const userSession = JSON.parse(request.session.passport.user)
+        const d = await this.getDataFromUserId(parseInt(session), userSession.userID)
         const user = await this.userService
         .findUnique({
             where: {
-                userID: session.userID
+                userID: userSession.userID
             }});
 
-        return {user, ...d}
+        return {user, ...d, session: session}
     }
 
 
-    async getDataFromUserId(data: string, userId: number) {
+    async getDataFromUserId(session: number, userId: number) {
         const {patients} = await this.getUserWithPatients(userId)
         const sessions = patients.reduce((acc : string[], p : UserWithTherapies[]) => [
             ...acc,
@@ -145,24 +144,13 @@ export class IndexController {
 
                         ], [])
                 ], [])
-        ], [])
-        const types =  sessions.reduce((acc : string[], ts : Test_Session) => ({
-            ...acc,
-            [`${ts.dataURL}.csv`]: ts.type
-        }), {})
-        const type = types[data];
-        const files = sessions.reduce((acc : string[], ts : Test_Session) => [
-            ...acc,
-            `${ts.dataURL}.csv`
-        ], [])
-        if (!files.includes(data)) {
-            throw new Forbidden("You do not have access to that file")
-        }
-        const csvPath = path.join(__dirname, `../data/${data}`);
+        ], []).filter((s: Test_Session) => s.test_SessionID === session)
+        const type = sessions[0].type;
+        const file = sessions[0].dataURL
+        const csvPath = path.join(__dirname, `../data/${file}.csv`);
         // https://stackoverflow.com/questions/67256503/csv-to-json-list-of-arrays
-        const json = await csv()
-            .fromFile(csvPath)
-        return {data: json, type}
+        const json = await csv().fromFile(csvPath)
+        return {data: json, type, annotations: sessions[0].annotations}
     }
 
     async fetchRSSFeed(feed : string) {
@@ -197,7 +185,8 @@ export class IndexController {
                                                                 include: {
                                                                     user_med: true
                                                                 }
-                                                            }
+                                                            },
+                                                            annotations: true
                                                         }
                                                     }
                                                 }

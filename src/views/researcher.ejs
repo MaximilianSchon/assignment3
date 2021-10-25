@@ -1,36 +1,34 @@
 <%- include('./common/head'); %>
 <header>
-    <%- include('./common/navbar', {user: user}); %>
-     <script
-      type="text/javascript"
-      src="https://www.gstatic.com/charts/loader.js"
-    ></script>
-    <script type="text/javascript">
-      google.charts.load("current", {
-        packages: ["map"],
 
-        mapsApiKey: "<%= process.env.GOOGLE_API_KEY %>",
-      });
-      google.charts.setOnLoadCallback(drawChart);
-      function drawChart() {
-        var data = google.visualization.arrayToDataTable([
-          ["Lat", "Long", "Name"],
-          [59.6567, 16.6709, "patient1"],
-          [57.3365, 12.5164, "patient2"],
-        ]);
-        var options = {
-          showTooltip: true,
-          showInfoWindow: true,
-        };
-        var map = new google.visualization.Map(
-          document.getElementById("map_div")
-        );
-        map.draw(data, {
-          showTooltip: true,
-          showInfoWindow: true,
+    <script type="text/javascript">
+      function loadURL(marker) {
+          return function () {
+              window.location.href = marker.url;
+          }
+      }
+
+      function initMap() {
+        var patients = <%- JSON.stringify(patients.map(p => ({lat: p.lat, lng: p.lng, patient: p.username}))) %>
+        const map = new google.maps.Map(document.getElementById("map"), {
+            center: { lat: 60.1282, lng: 18.6535 },
+            zoom: 5,
+          });
+        patients.forEach((p) => {
+          const marker = new google.maps.Marker({
+            position: p,
+            map,
+            title: p.patient,
+            url: "/researcher#" + p.patient
+          });
+          google.maps.event.addListener(marker, 'click', loadURL(marker));
+
         });
       }
     </script>
+      <%- include('./common/navbar', {user: user}); %>
+      <script async defer src="https://maps.googleapis.com/maps/api/js?key=<%= process.env.GOOGLE_API_KEY %>&callback=initMap"></script>
+  
 </header>
 <body>
     <%- include('./common/map', {latitudes: []}); %>
